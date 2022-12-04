@@ -1,0 +1,7 @@
+cloudflare_api_token = ""
+cloudflare_zone_id = ""
+domain = ""
+email = ""
+keyfile = ""
+region = ""
+subdomain = ""
