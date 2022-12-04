@@ -23,7 +23,7 @@ resource "aws_instance" "proxy" {
   ami                         = data.aws_ami.ubuntu.id
   subnet_id                   = aws_subnet.public_subnet.id
   key_name                    = aws_key_pair.proxy_key_pair.key_name
-  user_data                   = data.template_file.init.rendered
+  user_data                   = data.template_cloudinit_config.init.rendered
   instance_type               = "t2.micro"
   vpc_security_group_ids      = [aws_security_group.proxy_sg.id]
   tags = {
@@ -31,11 +31,29 @@ resource "aws_instance" "proxy" {
   }
 }
 
+data "template_cloudinit_config" "init" {
+  gzip          = false
+  base64_encode = false
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+    #!/bin/bash
+    echo "${cloudflare_origin_ca_certificate.cloudflare_to_proxy.certificate}" | sudo tee -a /etc/ssl/certs/tunnel_cert.pem
+    echo "${tls_private_key.cloudflare_to_proxy.private_key_pem}" | sudo tee -a /etc/ssl/certs/tunnel_key.pem
+    EOF
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = data.template_file.init.rendered
+  }
+}
+
 data "template_file" "init" {
   template = file("init.sh")
 
   vars = {
-    CLOUDFLARE_API_TOKEN = var.cloudflare_api_token
     EMAIL = var.email
     SERVER = "${var.subdomain}.${var.domain}"
   }
@@ -102,9 +120,45 @@ resource "cloudflare_record" "tunnel" {
   name    = var.subdomain
   value   = aws_eip.proxy_eip.public_ip
   type    = "A"
-#  proxied = true
+  proxied = true
+}
+
+resource "cloudflare_record" "unproxied" {
+  zone_id = var.cloudflare_zone_id
+  name    = "host"
+  value   = aws_eip.proxy_eip.public_ip
+  type    = "A"
+}
+
+resource "tls_private_key" "cloudflare_to_proxy" {
+  algorithm = "RSA"
+}
+
+resource "tls_cert_request" "cloudflare_to_proxy" {
+  private_key_pem = tls_private_key.cloudflare_to_proxy.private_key_pem
+
+  subject {
+    common_name  = var.domain
+  }
+}
+
+provider "cloudflare" {
+  alias = "origin_ca"
+  api_user_service_key = var.cloudflare_origin_ca_key
+}
+
+resource "cloudflare_origin_ca_certificate" "cloudflare_to_proxy" {
+  provider = cloudflare.origin_ca
+  csr                = tls_cert_request.cloudflare_to_proxy.cert_request_pem
+  hostnames          = ["grok.${var.domain}"]
+  request_type       = "origin-rsa"
+  requested_validity = 7
 }
 
 output "proxy_eip" {
   value = aws_eip.proxy_eip.public_ip
+}
+
+output "cert_pem" {
+  value = cloudflare_origin_ca_certificate.cloudflare_to_proxy.certificate
 }

@@ -1,4 +1,5 @@
 cloudflare_api_token = ""
+cloudflare_origin_ca_key = ""
 cloudflare_zone_id = ""
 domain = ""
 email = ""
