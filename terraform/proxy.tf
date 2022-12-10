@@ -120,7 +120,7 @@ resource "aws_security_group" "proxy_sg" {
 
 resource "cloudflare_record" "tunnel" {
   zone_id = var.cloudflare_zone_id
-  name    = var.subdomain
+  name    = "*"
   value   = aws_eip.proxy_eip.public_ip
   type    = "A"
   proxied = true
@@ -153,7 +153,7 @@ provider "cloudflare" {
 resource "cloudflare_origin_ca_certificate" "cloudflare_to_proxy" {
   provider = cloudflare.origin_ca
   csr                = tls_cert_request.cloudflare_to_proxy.cert_request_pem
-  hostnames          = ["${var.subdomain}.${var.domain}"]
+  hostnames          = ["*.${var.domain}"]
   request_type       = "origin-rsa"
   requested_validity = 7
 }
