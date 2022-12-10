@@ -1,6 +1,6 @@
-resource "aws_key_pair" "proxy_key_pair" {
-  key_name   = "twmac"
-  public_key = file(var.keyfile)
+resource "aws_key_pair" "proxy_key_pair_pi" {
+  key_name   = "pi"
+  public_key = file(var.keyfile_pi)
 }
 
 data "aws_ami" "ubuntu" {
@@ -22,7 +22,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "proxy" {
   ami                         = data.aws_ami.ubuntu.id
   subnet_id                   = aws_subnet.public_subnet.id
-  key_name                    = aws_key_pair.proxy_key_pair.key_name
+  key_name                    = aws_key_pair.proxy_key_pair_pi.key_name
   user_data                   = data.template_cloudinit_config.init.rendered
   instance_type               = "t2.micro"
   vpc_security_group_ids      = [aws_security_group.proxy_sg.id]
@@ -96,11 +96,14 @@ resource "aws_security_group" "proxy_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${data.http.ip.body}/32"]
+  dynamic "ingress" {
+    for_each = tolist(setunion(var.ssh_allow_list, [data.http.ip.body]))
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["${ingress.value}/32"]
+    }
   }
 
   egress {
@@ -157,8 +160,4 @@ resource "cloudflare_origin_ca_certificate" "cloudflare_to_proxy" {
 
 output "proxy_eip" {
   value = aws_eip.proxy_eip.public_ip
-}
-
-output "cert_pem" {
-  value = cloudflare_origin_ca_certificate.cloudflare_to_proxy.certificate
 }

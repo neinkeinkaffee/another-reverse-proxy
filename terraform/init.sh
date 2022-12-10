@@ -27,7 +27,7 @@ server {
     proxy_set_header Host \$http_host;
     proxy_redirect off;
 
-    proxy_pass https://tunnel;
+    proxy_pass http://tunnel;
   }
 }
 
