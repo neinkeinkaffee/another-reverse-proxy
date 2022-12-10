@@ -3,10 +3,6 @@
 # Install packages
 sudo apt-get update > /dev/null
 sudo apt-get install -y fail2ban nginx
-sudo snap install core
-sudo snap refresh core
-sudo snap install --classic certbot
-sudo ln -s /snap/bin/certbot /usr/bin/certbot
 
 # Write nginx.conf
 cat <<EOF | sudo tee -a /etc/nginx/conf.d/${SERVER}.conf
@@ -27,12 +23,12 @@ server {
     proxy_set_header Host \$http_host;
     proxy_redirect off;
 
-    proxy_pass http://tunnel;
+    proxy_pass https://tunnel;
   }
 }
 
 server {
-  if (\$host = grok.otherthings.net) {
+  if (\$host = ${SERVER}) {
       return 301 https://\$host\$request_uri;
   }
 
@@ -44,6 +40,3 @@ EOF
 
 # Run nginx
 sudo systemctl start nginx.service
-
-# Run certbot
-sudo certbot --nginx --non-interactive --agree-tos -d ${SERVER} -m ${EMAIL}

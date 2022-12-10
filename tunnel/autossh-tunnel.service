@@ -1,0 +1,9 @@
+[Unit]
+Description=Autossh tunnel
+
+[Service]
+ExecStart=/usr/lib/autossh/autossh -M 0 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -N -R 8888:localhost:8000 ubuntu@host.otherthings.net
+User=pi
+
+[Install]
+WantedBy=multi-user.target

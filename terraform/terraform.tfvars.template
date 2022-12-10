@@ -6,4 +6,5 @@ email = ""
 keyfile = ""
 keyfile_pi = ""
 region = ""
+ssh_allow_list = []
 subdomain = ""

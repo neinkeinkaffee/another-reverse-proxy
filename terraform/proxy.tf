@@ -153,7 +153,7 @@ provider "cloudflare" {
 resource "cloudflare_origin_ca_certificate" "cloudflare_to_proxy" {
   provider = cloudflare.origin_ca
   csr                = tls_cert_request.cloudflare_to_proxy.cert_request_pem
-  hostnames          = ["grok.${var.domain}"]
+  hostnames          = ["${var.subdomain}.${var.domain}"]
   request_type       = "origin-rsa"
   requested_validity = 7
 }

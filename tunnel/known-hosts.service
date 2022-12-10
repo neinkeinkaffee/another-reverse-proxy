@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh known hosts
+
+[Service]
+ExecStart=/bin/bash /usr/bin/known-hosts-refresh.sh
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+pi@pirouter:~ $ cat /usr/bin/update-known-hosts.sh

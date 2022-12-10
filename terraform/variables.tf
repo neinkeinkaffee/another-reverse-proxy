@@ -6,8 +6,5 @@ variable "email" {}
 variable "keyfile" {}
 variable "keyfile_pi" {}
 variable "region" {}
-variable "ssh_allow_list" {
-  type = set(string)
-  default = ["86.191.185.141"]
-}
+variable "ssh_allow_list" {type = set(string)}
 variable "subdomain" {}
