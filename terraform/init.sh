@@ -5,13 +5,13 @@ sudo apt-get update > /dev/null
 sudo apt-get install -y fail2ban nginx
 
 # Write nginx.conf
-cat <<EOF | sudo tee -a /etc/nginx/conf.d/${SERVER}.conf
+cat <<EOF | sudo tee -a /etc/nginx/conf.d/${DOMAIN}.conf
 upstream tunnel {
   server 127.0.0.1:8888;
 }
 
 server {
-  server_name ${SERVER};
+  server_name *.${DOMAIN};
 
   listen 443 ssl;
   ssl_certificate /etc/ssl/certs/tunnel_cert.pem;
@@ -23,18 +23,16 @@ server {
     proxy_set_header Host \$http_host;
     proxy_redirect off;
 
-    proxy_pass https://tunnel;
+    proxy_pass http://tunnel;
   }
 }
 
 server {
-  if (\$host = ${SERVER}) {
-      return 301 https://\$host\$request_uri;
-  }
+  server_name *.${DOMAIN};
 
-  server_name ${SERVER};
   listen 80;
-  return 404;
+
+  return 301 https://\$host\$request_uri;
 }
 EOF
 

@@ -55,7 +55,7 @@ data "template_file" "init" {
 
   vars = {
     EMAIL = var.email
-    SERVER = "${var.subdomain}.${var.domain}"
+    DOMAIN = var.domain
   }
 }
 
