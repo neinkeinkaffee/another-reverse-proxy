@@ -38,3 +38,5 @@ EOF
 
 # Run nginx
 sudo systemctl start nginx.service
+sudo systemctl enable nginx.service
+sudo systemctl restart nginx.service
